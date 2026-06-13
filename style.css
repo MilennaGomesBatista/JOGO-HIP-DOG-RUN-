@@ -235,12 +235,19 @@ body {
   border-radius: 20px;
   width: 100%;
   max-width: 580px;
-  max-height: 90%;
-  padding: 20px;
+  max-height: 95%;
+  padding: 16px 20px;
   overflow-y: auto;
+  scrollbar-width: none; /* Oculta barra no Firefox */
+  -ms-overflow-style: none; /* Oculta barra no IE/Edge */
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+/* Oculta barra no Chrome, Safari e Opera */
+.glass-panel::-webkit-scrollbar {
+  display: none;
 }
 
 /* 6. CONTEÚDO DOS MENUS */
