@@ -1,32 +1,41 @@
 /* ================= style.css - Hip Dog Run ================= */
 
 /* 1. RESET E ESTILOS GLOBAIS */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  -webkit-user-select: none; /* Desativa seleção de texto no mobile */
+  -webkit-user-select: none;
+  /* Desativa seleção de texto no mobile */
   user-select: none;
-  -webkit-tap-highlight-color: transparent; /* Remove brilho cinza ao tocar no mobile */
+  -webkit-tap-highlight-color: transparent;
+  /* Remove brilho cinza ao tocar no mobile */
 }
+
 
 :root {
   --font-title: 'Outfit', sans-serif;
   --font-body: 'Quicksand', sans-serif;
-  
+
   /* Cores Premium e Harmoniosas */
   --bg-app: #090d16;
   --bg-console: #111827;
   --glass-bg: rgba(17, 24, 39, 0.75);
   --glass-border: rgba(255, 255, 255, 0.08);
-  
-  --primary: #f59e0b; /* Amarelo ouro para destaques */
-  --secondary: #3b82f6; /* Azul para veterinária / fisioterapia */
-  --success: #10b981; /* Verde menta para itens bons */
-  --danger: #ef4444; /* Vermelho coral para perigos */
+
+  --primary: #f59e0b;
+  /* Amarelo ouro para destaques */
+  --secondary: #3b82f6;
+  /* Azul para veterinária / fisioterapia */
+  --success: #10b981;
+  /* Verde menta para itens bons */
+  --danger: #ef4444;
+  /* Vermelho coral para perigos */
   --text-main: #f3f4f6;
   --text-muted: #9ca3af;
-  
+
   --shadow-neon: 0 0 15px rgba(245, 158, 11, 0.35);
   --shadow-glass: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
@@ -36,7 +45,8 @@ body {
   background-color: var(--bg-app);
   color: var(--text-main);
   height: 100vh;
-  height: 100dvh; /* Altura dinâmica do viewport para mobile */
+  height: 100dvh;
+  /* Altura dinâmica do viewport para mobile */
   overflow: hidden;
   display: flex;
   justify-content: center;
@@ -105,9 +115,15 @@ body {
 .beating {
   animation: beat 1s infinite alternate;
 }
+
 @keyframes beat {
-  0% { transform: scale(1); }
-  100% { transform: scale(1.15); }
+  0% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1.15);
+  }
 }
 
 /* Barra de Vida */
@@ -118,7 +134,7 @@ body {
   border-radius: 6px;
   overflow: hidden;
   margin-right: 8px;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 #lifeBar {
@@ -151,7 +167,7 @@ body {
 #stageValue {
   font-size: 0.9rem;
   color: var(--primary);
-  text-shadow: 0 0 5px rgba(245,158,11,0.3);
+  text-shadow: 0 0 5px rgba(245, 158, 11, 0.3);
 }
 
 /* Informações dos Pontos */
@@ -180,7 +196,8 @@ body {
   position: relative;
   width: 100%;
   height: 100%;
-  background: #1e293b; /* Fallback de fundo do canvas */
+  background: #1e293b;
+  /* Fallback de fundo do canvas */
 }
 
 #gameCanvas {
@@ -238,8 +255,10 @@ body {
   max-height: 95%;
   padding: 16px 20px;
   overflow-y: auto;
-  scrollbar-width: none; /* Oculta barra no Firefox */
-  -ms-overflow-style: none; /* Oculta barra no IE/Edge */
+  scrollbar-width: none;
+  /* Oculta barra no Firefox */
+  -ms-overflow-style: none;
+  /* Oculta barra no IE/Edge */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -257,7 +276,7 @@ body {
   border-radius: 12px;
   overflow: hidden;
   margin-bottom: 12px;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 #coverImage {
@@ -313,8 +332,13 @@ body {
   text-align: center;
 }
 
-.instruction-box.positive h3 { color: var(--success); }
-.instruction-box.negative h3 { color: var(--danger); }
+.instruction-box.positive h3 {
+  color: var(--success);
+}
+
+.instruction-box.negative h3 {
+  color: var(--danger);
+}
 
 .item-list {
   display: flex;
@@ -334,9 +358,17 @@ body {
 }
 
 @keyframes pulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
+  0% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.6;
+  }
 }
 
 /* BOTÕES PREMIUM */
@@ -387,9 +419,9 @@ body {
   width: 100%;
   max-width: 480px;
   text-align: left;
-  border-top: 1px solid rgba(255,255,255,0.03);
-  border-bottom: 1px solid rgba(255,255,255,0.03);
-  border-right: 1px solid rgba(255,255,255,0.03);
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-right: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 .educational-card h3 {
@@ -427,8 +459,8 @@ body {
 }
 
 .dog-evolution-graphic {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.04);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
   width: 100px;
   height: 100px;
   border-radius: 50px;
@@ -436,7 +468,7 @@ body {
   justify-content: center;
   align-items: center;
   margin-bottom: 10px;
-  box-shadow: inset 0 0 15px rgba(255,255,255,0.05);
+  box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.05);
 }
 
 /* Painel de Game Over */
@@ -464,10 +496,10 @@ body {
 .recap-item {
   display: flex;
   flex-direction: column;
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
   padding: 10px 18px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   min-width: 120px;
 }
 
@@ -484,8 +516,13 @@ body {
   color: #fff;
 }
 
-.text-center { text-align: center; }
-.text-left { text-align: left; }
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
 
 /* 7. RESPONSIVIDADE E AJUSTES DE TELA PARA MÓVEL */
 
@@ -494,21 +531,21 @@ body {
   #appContainer {
     padding: 0;
   }
-  
+
   #gameConsole {
     border-radius: 0;
     border: none;
   }
-  
+
   #hud {
     padding: 8px 12px;
   }
-  
+
   .hud-item {
     padding: 4px 8px;
     font-size: 0.8rem;
   }
-  
+
   .hud-icon {
     font-size: 1rem;
     margin-right: 4px;
@@ -517,26 +554,26 @@ body {
   .life-bar-container {
     width: 50px;
   }
-  
+
   .glass-panel {
     max-height: 95%;
     padding: 15px;
   }
-  
+
   .game-title {
     font-size: 1.6rem;
   }
-  
+
   .instructions-grid {
     grid-template-columns: 1fr;
     gap: 8px;
   }
-  
+
   .recap-item {
     min-width: 90px;
     padding: 6px 10px;
   }
-  
+
   .recap-val {
     font-size: 1.1rem;
   }
@@ -547,64 +584,65 @@ body {
   #appContainer {
     padding: 0;
   }
-  
+
   #gameConsole {
     border-radius: 0;
     border: none;
   }
-  
+
   #hud {
     padding: 6px 15px;
   }
-  
+
   .cover-image-container {
-    display: none; /* Esconde imagem de capa no landscape curto para economizar espaço */
+    display: none;
+    /* Esconde imagem de capa no landscape curto para economizar espaço */
   }
-  
+
   .glass-panel {
     padding: 10px 20px;
     max-height: 98%;
   }
-  
+
   .game-title {
     font-size: 1.4rem;
     margin-bottom: 2px;
   }
-  
+
   .game-subtitle {
     margin-bottom: 8px;
     font-size: 0.75rem;
   }
-  
+
   .instructions-grid {
     margin-bottom: 8px;
     gap: 10px;
   }
-  
+
   .educational-card {
     margin: 8px 0;
     padding: 8px 12px;
   }
-  
+
   .control-tip {
     margin-bottom: 8px;
     font-size: 0.75rem;
   }
-  
+
   .btn {
     padding: 8px 24px;
     font-size: 0.85rem;
   }
-  
+
   .dog-evolution-graphic {
     width: 60px;
     height: 60px;
   }
-  
+
   #evolutionEmoji {
     font-size: 2.8rem !important;
   }
-  
+
   #newLevelTitle {
     font-size: 1.2rem;
     margin-bottom: 6px;

@@ -8,6 +8,7 @@ class SoundFX {
     this.ctx = null;
   }
 
+
   // Inicializa o AudioContext apenas após interação do usuário (exigência dos navegadores)
   init() {
     if (!this.ctx) {
@@ -19,21 +20,21 @@ class SoundFX {
   playJump() {
     this.init();
     if (!this.ctx) return;
-    
+
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-    
+
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(150, now);
     osc.frequency.exponentialRampToValueAtTime(400, now + 0.15);
-    
+
     gain.gain.setValueAtTime(0.15, now);
     gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
-    
+
     osc.connect(gain);
     gain.connect(this.ctx.destination);
-    
+
     osc.start(now);
     osc.stop(now + 0.15);
   }
@@ -72,21 +73,21 @@ class SoundFX {
     if (!this.ctx) return;
 
     const now = this.ctx.currentTime;
-    
+
     // Som áspero principal
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-    
+
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(220, now);
     osc.frequency.linearRampToValueAtTime(80, now + 0.25);
-    
+
     gain.gain.setValueAtTime(0.15, now);
     gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
-    
+
     osc.connect(gain);
     gain.connect(this.ctx.destination);
-    
+
     osc.start(now);
     osc.stop(now + 0.25);
 
@@ -98,25 +99,25 @@ class SoundFX {
       for (let i = 0; i < bufferSize; i++) {
         data[i] = Math.random() * 2 - 1;
       }
-      
+
       const noiseNode = this.ctx.createBufferSource();
       noiseNode.buffer = buffer;
-      
+
       const noiseFilter = this.ctx.createBiquadFilter();
       noiseFilter.type = 'bandpass';
       noiseFilter.frequency.value = 400;
-      
+
       const noiseGain = this.ctx.createGain();
       noiseGain.gain.setValueAtTime(0.08, now);
       noiseGain.gain.linearRampToValueAtTime(0.01, now + 0.15);
-      
+
       noiseNode.connect(noiseFilter);
       noiseFilter.connect(noiseGain);
       noiseGain.connect(this.ctx.destination);
-      
+
       noiseNode.start(now);
       noiseNode.stop(now + 0.15);
-    } catch(e) {
+    } catch (e) {
       // Fallback silencioso se o buffer falhar
     }
   }
@@ -127,7 +128,7 @@ class SoundFX {
     if (!this.ctx) return;
 
     const now = this.ctx.currentTime;
-    
+
     // Duas notas em harmonia brilhante
     const playTone = (freq, delay, dur) => {
       const osc = this.ctx.createOscillator();
@@ -187,7 +188,7 @@ class Particle {
     ctx.shadowBlur = this.isGood ? 8 : 0;
     ctx.shadowColor = this.color;
     ctx.fillStyle = this.color;
-    
+
     if (this.isGood) {
       // Desenha pequenas estrelas brilhantes para coisas boas
       ctx.beginPath();
@@ -227,12 +228,12 @@ class Dog {
     this.gravity = 0.65;
     this.jumpPower = -12.5;
     this.isJumping = false;
-    
+
     // Animação de corrida
     this.legAngle = 0;
     this.runSpeedModifier = 0.22;
     this.tailWagAngle = 0;
-    
+
     this.stage = 'Filhote'; // Filhote, Jovem, Adulto saudável, Campeão
   }
 
@@ -262,7 +263,7 @@ class Dog {
       this.tailWagAngle = Math.sin(this.legAngle * 1.5) * 0.3;
     } else {
       // Postura de pulo (pernas esticadas, orelhas estáticas)
-      this.legAngle = 0.5; 
+      this.legAngle = 0.5;
       this.tailWagAngle = -0.4;
     }
   }
@@ -301,7 +302,7 @@ class Dog {
 
     // Aplicar escala do tamanho do cachorro
     ctx.scale(sizeScale, sizeScale);
-    
+
     // Deslocar para manter as patas apoiadas corretamente na escala
     ctx.translate(0, (this.height - this.height * sizeScale) / sizeScale);
 
@@ -312,7 +313,7 @@ class Dog {
       // Movimento harmônico de tesoura
       const rotation = Math.sin(this.legAngle + phaseOffset) * 0.6;
       ctx.rotate(rotation);
-      
+
       ctx.fillStyle = secondaryColor;
       ctx.beginPath();
       // Pata estilizada
@@ -346,7 +347,7 @@ class Dog {
     ctx.beginPath();
     ctx.ellipse(59, 8, 8, 6, 0, 0, Math.PI * 2);
     ctx.fill();
-    
+
     // Narizinho
     ctx.fillStyle = '#1e293b';
     ctx.beginPath();
@@ -396,7 +397,7 @@ class Dog {
       ctx.fillStyle = '#facc15';
       ctx.strokeStyle = '#854d0e';
       ctx.lineWidth = 1.5;
-      
+
       // Estrela de Campeão flutuante na cabeça
       ctx.beginPath();
       ctx.moveTo(0, -6);
@@ -428,12 +429,12 @@ class GameItem {
     this.emoji = data.emoji;
     this.isGood = data.isGood;
     this.color = data.color;
-    
+
     // Configuração de coordenadas
     this.width = 44;
     this.height = 44;
     this.x = canvasWidth + 50;
-    
+
     // Altura de spawn: 65% no chão, 35% no ar (pulo necessário!)
     const spawnHigh = Math.random() < 0.35;
     this.y = spawnHigh ? canvasHeight - 130 : canvasHeight - 65;
@@ -449,17 +450,17 @@ class GameItem {
     // Efeito de brilho/halo em volta do token
     ctx.shadowBlur = 12;
     ctx.shadowColor = this.color;
-    
+
     // Círculo base Glassmorphic
     ctx.fillStyle = 'rgba(17, 24, 39, 0.85)';
     ctx.strokeStyle = this.color;
     ctx.lineWidth = 3;
-    
+
     ctx.beginPath();
     ctx.arc(this.x, this.y, 22, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    
+
     // Remover o efeito de sombra para desenhar o texto (evita borrão)
     ctx.shadowBlur = 0;
 
@@ -483,7 +484,7 @@ class GameItem {
     // Ponto central do cão
     const dogCX = dog.x + dog.width / 2;
     const dogCY = dog.y + dog.height / 2;
-    
+
     // Ponto central do item
     const itemCX = this.x;
     const itemCY = this.y;
@@ -492,7 +493,7 @@ class GameItem {
     const dx = dogCX - itemCX;
     const dy = dogCY - itemCY;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    
+
     // Tolerância confortável para o jogador
     return distance < (dog.width / 2.2 + 20);
   }
@@ -507,7 +508,7 @@ const ITEM_POOL = [
   { name: 'Natação', emoji: '🏊', isGood: true, color: '#10b981' },
   { name: 'Condroprotetor', emoji: '💊', isGood: true, color: '#10b981' },
   { name: 'Consulta Vet', emoji: '🩺', isGood: true, color: '#10b981' },
-  
+
   // Ruins (Perigos ❌)
   { name: 'Obesidade', emoji: '🍔', isGood: false, color: '#ef4444' },
   { name: 'Sedentarismo', emoji: '🛋️', isGood: false, color: '#ef4444' },
@@ -539,17 +540,17 @@ class GameEngine {
     this.scoreVal = document.getElementById('scoreValue');
     this.stageVal = document.getElementById('stageValue');
     this.damageFlash = document.getElementById('damageFlash');
-    
+
     // Overlays
     this.startOverlay = document.getElementById('startOverlay');
     this.levelUpOverlay = document.getElementById('levelUpOverlay');
     this.gameOverOverlay = document.getElementById('gameOverOverlay');
-    
+
     // Botões
     document.getElementById('btnStart').addEventListener('pointerdown', (e) => this.startGame(e));
     document.getElementById('btnContinue').addEventListener('pointerdown', (e) => this.resumeGame(e));
     document.getElementById('btnRestart').addEventListener('pointerdown', (e) => this.restartGame(e));
-    
+
     // Ouvir Toque Geral para Pular
     document.body.addEventListener('pointerdown', (e) => this.handleActionInput(e));
     window.addEventListener('keydown', (e) => {
@@ -563,14 +564,14 @@ class GameEngine {
     this.dog = new Dog(300);
     this.items = [];
     this.particles = [];
-    
+
     // Estatísticas da Partida
     this.score = 0;
     this.life = 100;
     this.speed = 3.8;
     this.maxSpeed = 8.5;
     this.stage = 'Filhote';
-    
+
     // Configurações de Spawn
     this.spawnTimer = 0;
     this.spawnInterval = 130; // A cada X frames
@@ -600,7 +601,7 @@ class GameEngine {
     const parent = this.canvas.parentElement;
     this.canvas.width = parent.clientWidth;
     this.canvas.height = parent.clientHeight;
-    
+
     if (this.dog) {
       this.dog.groundY = this.canvas.height - 65;
       if (this.state === 'START') {
@@ -612,7 +613,7 @@ class GameEngine {
   startGame(e) {
     if (e) e.stopPropagation();
     sounds.init();
-    
+
     // Inicia a música de fundo com volume confortável (35%)
     const bgMusic = document.getElementById('bgMusic');
     if (bgMusic) {
@@ -620,7 +621,7 @@ class GameEngine {
       bgMusic.volume = 0.35;
       bgMusic.play().catch(err => console.log("Erro ao reproduzir trilha sonora:", err));
     }
-    
+
     this.startOverlay.classList.remove('active');
     this.state = 'PLAYING';
     this.score = 0;
@@ -631,7 +632,7 @@ class GameEngine {
     this.items = [];
     this.particles = [];
     this.spawnTimer = 0;
-    
+
     this.updateHUD();
     this.scoreVal.textContent = '0000';
     sounds.playCollect();
@@ -641,7 +642,7 @@ class GameEngine {
     if (e) e.stopPropagation();
     this.levelUpOverlay.classList.remove('active');
     this.state = 'PLAYING';
-    
+
     // Efeito de recuperação leve ao evoluir
     this.life = Math.min(100, this.life + 15);
     this.updateHUD();
@@ -650,14 +651,14 @@ class GameEngine {
   restartGame(e) {
     if (e) e.stopPropagation();
     this.gameOverOverlay.classList.remove('active');
-    
+
     // Reseta a música de fundo
     const bgMusic = document.getElementById('bgMusic');
     if (bgMusic) {
       bgMusic.pause();
       bgMusic.currentTime = 0;
     }
-    
+
     // Reseta o estado do jogo e retorna para o menu inicial (fase Filhote)
     this.state = 'START';
     this.score = 0;
@@ -668,7 +669,7 @@ class GameEngine {
     this.items = [];
     this.particles = [];
     this.spawnTimer = 0;
-    
+
     this.updateHUD();
     this.scoreVal.textContent = '0000';
     this.startOverlay.classList.add('active');
@@ -679,7 +680,7 @@ class GameEngine {
     if (e.target.closest('.btn') || e.target.closest('.overlay.active')) {
       return;
     }
-    
+
     e.preventDefault();
     this.triggerJump();
   }
@@ -698,7 +699,7 @@ class GameEngine {
     if (this.state === 'PLAYING') {
       this.updatePhysics();
     }
-    
+
     this.render();
     requestAnimationFrame((t) => this.gameLoop(t));
   }
@@ -710,7 +711,7 @@ class GameEngine {
     // 2. Incrementar a pontuação por corrida
     this.score += 0.05;
     this.scoreVal.textContent = String(Math.floor(this.score)).padStart(4, '0');
-    
+
     // Aumento suave de velocidade conforme score
     this.speed = Math.min(this.maxSpeed, 3.8 + (this.score * 0.006));
 
@@ -733,7 +734,7 @@ class GameEngine {
       // Escolher um item aleatório do catálogo
       const randomItemData = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
       this.items.push(new GameItem(this.canvas.width, this.canvas.height, randomItemData));
-      
+
       // Ajustar intervalo de spawn de acordo com velocidade
       this.spawnInterval = Math.max(90, 140 - Math.floor(this.speed * 8));
     }
@@ -789,23 +790,23 @@ class GameEngine {
       // Impacto Negativo
       this.life = Math.max(0, this.life - 25);
       this.score = Math.max(0, this.score - 5);
-      
+
       // Desaceleração temporária
       this.speed = Math.max(2.8, this.speed - 1.5);
-      
+
       sounds.playHit();
       this.createParticlesBurst(item.x, item.y, '#ef4444', false);
-      
+
       // Efeitos Visuais e Físicos Extra no Celular!
       this.triggerScreenShake(18, 6);
       this.triggerFlashEffect(true);
-      
+
       // Ativar Vibração Física se estiver no Celular
       if (navigator.vibrate) {
         navigator.vibrate(150);
       }
     }
-    
+
     this.updateHUD();
 
     // Testar se morreu
@@ -857,17 +858,17 @@ class GameEngine {
       this.stage = targetStage;
       this.dog.stage = targetStage;
       this.state = 'LEVEL_UP';
-      
+
       // Atualizar Badge e Mensagem Educativa
       document.getElementById('newLevelTitle').textContent = `Evoluiu para: ${targetStage}! 🎉`;
       document.getElementById('educationalMessage').textContent = eduMsg;
-      
+
       // Ícone do Estágio
       const evolutionEmojiEl = document.getElementById('evolutionEmoji');
       if (targetStage === 'Jovem') evolutionEmojiEl.textContent = '🐕';
       else if (targetStage === 'Adulto saudável') evolutionEmojiEl.textContent = '🐕‍🦺';
       else evolutionEmojiEl.textContent = '🏆';
-      
+
       this.levelUpOverlay.classList.add('active');
       this.updateHUD();
       sounds.playLevelUp();
@@ -878,7 +879,7 @@ class GameEngine {
     // Barra de Vida
     this.lifeBar.style.width = `${this.life}%`;
     this.lifeText.textContent = `${this.life}%`;
-    
+
     // Cor da barra baseada no valor
     if (this.life > 50) {
       this.lifeBar.style.background = 'linear-gradient(90deg, #10b981 0%, #34d399 100%)';
@@ -897,39 +898,39 @@ class GameEngine {
 
   triggerGameOver(isVictory = false) {
     this.state = 'GAME_OVER';
-    
+
     // Pausa a trilha sonora ao finalizar o jogo
     const bgMusic = document.getElementById('bgMusic');
     if (bgMusic) {
       bgMusic.pause();
     }
-    
+
     const titleEl = document.querySelector('.game-over-title');
     const descEl = document.querySelector('.game-over-desc');
     const tipTitleEl = document.querySelector('.educational-card h3');
     const tipDescEl = document.getElementById('gameOverTip');
-    
+
     if (isVictory) {
       this.score = 1000;
       this.scoreVal.textContent = '1000';
-      
+
       titleEl.innerHTML = 'Obrigado por jogar! 🏆';
       titleEl.style.color = 'var(--primary)';
       descEl.textContent = 'Você atingiu o limite de 1000 pontos e completou a jornada de mobilidade!';
-      
+
       tipTitleEl.textContent = '🏆 Conquista Máxima';
       tipDescEl.textContent = 'Seu cão se tornou um Campeão da Mobilidade Supremo! Continue aplicando esses cuidados de controle de peso, exercícios moderados e consultas veterinárias na vida real.';
-      
+
       sounds.playLevelUp();
     } else {
       titleEl.innerHTML = 'Fim da Corrida 💔';
       titleEl.style.color = 'var(--danger)';
       descEl.textContent = 'As articulações do seu cãozinho precisam de cuidados especiais.';
-      
+
       tipTitleEl.innerHTML = '💡 Sabia que...';
       const randomTip = GAME_TIPS[Math.floor(Math.random() * GAME_TIPS.length)];
       tipDescEl.textContent = randomTip;
-      
+
       sounds.playHit();
     }
 
@@ -944,7 +945,7 @@ class GameEngine {
   // ==========================================
   render() {
     this.ctx.save();
-    
+
     // Aplicar Screen Shake se houver
     if (this.shakeDuration > 0) {
       const dx = (Math.random() * 2 - 1) * this.shakeIntensity;
@@ -986,7 +987,7 @@ class GameEngine {
 
   drawSkyGradient() {
     const grad = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-    
+
     if (this.stage === 'Filhote') {
       // Amanhecer Pastel
       grad.addColorStop(0, '#fecdd3'); // Rosa claro
@@ -1010,14 +1011,14 @@ class GameEngine {
       grad.addColorStop(0.8, '#064e3b'); // Aurora Green escura
       grad.addColorStop(1, '#1e293b'); // Cinza azulado chão
     }
-    
+
     this.ctx.fillStyle = grad;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
   drawMountains() {
     this.ctx.save();
-    
+
     let mountColor1, mountColor2;
     if (this.stage === 'Filhote') {
       mountColor1 = 'rgba(125, 211, 252, 0.45)';
@@ -1064,7 +1065,7 @@ class GameEngine {
 
   drawGround() {
     this.ctx.save();
-    
+
     const groundHeight = 65;
     const y = this.canvas.height - groundHeight;
     const w = this.canvas.width;
@@ -1078,7 +1079,7 @@ class GameEngine {
       groundGrad.addColorStop(0, '#1e293b');
       groundGrad.addColorStop(1, '#0f172a');
     }
-    
+
     this.ctx.fillStyle = groundGrad;
     this.ctx.fillRect(0, y, w, groundHeight);
 
@@ -1095,13 +1096,13 @@ class GameEngine {
     this.ctx.lineWidth = 3;
     this.ctx.setLineDash([20, 30]); // Padrão tracejado
     // Deslocar de acordo com a velocidade do jogo e tempo para animar movimento
-    this.ctx.lineDashOffset = (this.score * 80) % 50; 
-    
+    this.ctx.lineDashOffset = (this.score * 80) % 50;
+
     this.ctx.beginPath();
     this.ctx.moveTo(0, y + 25);
     this.ctx.lineTo(w, y + 25);
     this.ctx.stroke();
-    
+
     this.ctx.restore();
   }
 }
