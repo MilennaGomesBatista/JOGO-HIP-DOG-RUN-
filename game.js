@@ -613,6 +613,14 @@ class GameEngine {
     if (e) e.stopPropagation();
     sounds.init();
     
+    // Inicia a música de fundo com volume confortável (35%)
+    const bgMusic = document.getElementById('bgMusic');
+    if (bgMusic) {
+      bgMusic.currentTime = 0;
+      bgMusic.volume = 0.35;
+      bgMusic.play().catch(err => console.log("Erro ao reproduzir trilha sonora:", err));
+    }
+    
     this.startOverlay.classList.remove('active');
     this.state = 'PLAYING';
     this.score = 0;
@@ -642,6 +650,13 @@ class GameEngine {
   restartGame(e) {
     if (e) e.stopPropagation();
     this.gameOverOverlay.classList.remove('active');
+    
+    // Reseta a música de fundo
+    const bgMusic = document.getElementById('bgMusic');
+    if (bgMusic) {
+      bgMusic.pause();
+      bgMusic.currentTime = 0;
+    }
     
     // Reseta o estado do jogo e retorna para o menu inicial (fase Filhote)
     this.state = 'START';
@@ -882,6 +897,12 @@ class GameEngine {
 
   triggerGameOver(isVictory = false) {
     this.state = 'GAME_OVER';
+    
+    // Pausa a trilha sonora ao finalizar o jogo
+    const bgMusic = document.getElementById('bgMusic');
+    if (bgMusic) {
+      bgMusic.pause();
+    }
     
     const titleEl = document.querySelector('.game-over-title');
     const descEl = document.querySelector('.game-over-desc');
