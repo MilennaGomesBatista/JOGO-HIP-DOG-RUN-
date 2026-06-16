@@ -951,6 +951,9 @@ class GameEngine {
       sounds.playCollect();
       this.createParticlesBurst(item.x, item.y, '#10b981', true);
       this.triggerFlashEffect(false);
+      
+      // Criar texto flutuante com a pontuação ganha
+      this.floatingTexts.push(new FloatingText(item.x, item.y - 20, '+10', '#10b981'));
     } else {
       // Impacto Negativo
       this.life = Math.max(0, this.life - 25);
