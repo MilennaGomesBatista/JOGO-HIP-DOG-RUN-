@@ -185,8 +185,6 @@ class Particle {
   draw(ctx) {
     ctx.save();
     ctx.globalAlpha = Math.max(0, this.alpha);
-    ctx.shadowBlur = this.isGood ? 8 : 0;
-    ctx.shadowColor = this.color;
     ctx.fillStyle = this.color;
 
     if (this.isGood) {
@@ -238,12 +236,12 @@ class FloatingText {
     ctx.globalAlpha = Math.max(0, this.alpha);
     ctx.font = 'bold 24px Arial';
     ctx.textAlign = 'center';
-    
+
     // Contorno do texto
     ctx.strokeStyle = 'rgba(17, 24, 39, 0.8)';
     ctx.lineWidth = 4;
     ctx.strokeText(this.text, this.x, this.y);
-    
+
     // Preenchimento
     ctx.fillStyle = this.color;
     ctx.fillText(this.text, this.x, this.y);
@@ -263,7 +261,7 @@ class Dog {
     this.height = 90;
     this.vy = 0;
     this.gravity = 0.65;
-    this.jumpPower = -12.5;
+    this.jumpPower = -15.5;
     this.isJumping = false;
 
     // Animação de sprite
@@ -298,7 +296,7 @@ class Dog {
   // Retorna um HTMLCanvasElement pronto para uso em drawImage().
   _removeBackground(img) {
     const offscreen = document.createElement('canvas');
-    offscreen.width  = img.naturalWidth;
+    offscreen.width = img.naturalWidth;
     offscreen.height = img.naturalHeight;
     const offCtx = offscreen.getContext('2d');
     offCtx.drawImage(img, 0, 0);
@@ -341,14 +339,31 @@ class Dog {
       data[idx + 3] = 0; // torna transparente
       const x = pos % w;
       const y = Math.floor(pos / w);
-      if (x > 0)     queue.push(pos - 1);
+      if (x > 0) queue.push(pos - 1);
       if (x < w - 1) queue.push(pos + 1);
-      if (y > 0)     queue.push(pos - w);
+      if (y > 0) queue.push(pos - w);
       if (y < h - 1) queue.push(pos + w);
     }
 
     offCtx.putImageData(imageData, 0, 0);
-    return offscreen; // canvas pode ser usado diretamente em drawImage
+
+    // Otimização: Escalar a imagem para um tamanho menor antes de usá-la no jogo.
+    // Isso evita o overhead de desenhar uma imagem gigante e reduzi-la a cada frame.
+    const targetWidth = 250;
+    const scale = targetWidth / w;
+    const targetHeight = Math.floor(h * scale);
+
+    const smallCanvas = document.createElement('canvas');
+    smallCanvas.width = targetWidth;
+    smallCanvas.height = targetHeight;
+    const smallCtx = smallCanvas.getContext('2d');
+
+    // Configurações para manter a suavidade na redução
+    smallCtx.imageSmoothingEnabled = true;
+    smallCtx.imageSmoothingQuality = 'high';
+    smallCtx.drawImage(offscreen, 0, 0, targetWidth, targetHeight);
+
+    return smallCanvas; // Retornamos o canvas menor otimizado
   }
 
   _loadSprites() {
@@ -440,9 +455,9 @@ class Dog {
 
   // Retorna a escala de tamanho baseada no estágio
   _getSizeScale() {
-    if (this.stage === 'Jovem')                  return 1.3;
-    if (this.stage === 'Adulto saudável')         return 1.5;
-    if (this.stage === 'Campeão da Mobilidade' || this.stage === 'Mestre da Agilidade' || this.stage === 'Lenda Canina')   return 1.7;
+    if (this.stage === 'Jovem') return 1.3;
+    if (this.stage === 'Adulto saudável') return 1.5;
+    if (this.stage === 'Campeão da Mobilidade' || this.stage === 'Mestre da Agilidade' || this.stage === 'Lenda Canina' || this.stage === 'Explorador da Floresta' || this.stage === 'Surfista da Praia') return 1.7;
     return 1.1; // Filhote
   }
 
@@ -498,6 +513,46 @@ class Dog {
   }
 }
 
+// Preload Cat Sprites
+const catSprites = {
+  normal: { walk: [], scared: [] },
+  preto: { walk: [], scared: [] },
+  branco: { walk: [], scared: [] }
+};
+
+for (let i = 1; i <= 10; i++) {
+  let imgN = new Image(); imgN.src = `sprite/gato-andando/gato-andando (${i}).png?v=3`;
+  let imgP = new Image(); imgP.src = `sprite/gato-andando-preto/gato-andando (${i}).png?v=3`;
+  let imgB = new Image(); imgB.src = `sprite/gato-andando-branco/gato-andando (${i}).png?v=3`;
+  catSprites.normal.walk.push(imgN);
+  catSprites.preto.walk.push(imgP);
+  catSprites.branco.walk.push(imgB);
+}
+for (let i = 23; i <= 51; i++) {
+  let num = String(i).padStart(3, '0');
+  let imgN = new Image(); imgN.src = `sprite/gato-assustado/ezgif-frame-${num}.png?v=3`;
+  let imgP = new Image(); imgP.src = `sprite/gato-assustado-preto/ezgif-frame-${num}.png?v=3`;
+  let imgB = new Image(); imgB.src = `sprite/gato-assustado-branco/ezgif-frame-${num}.png?v=3`;
+  catSprites.normal.scared.push(imgN);
+  catSprites.preto.scared.push(imgP);
+  catSprites.branco.scared.push(imgB);
+}
+
+
+// Preload Tronco Fixo
+const troncoImg = new Image();
+troncoImg.src = `sprite/tronco.png?v=1`;
+
+// Preload Bola Sprites
+const ballSprites = [];
+const ballFrames = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30];
+for (let i of ballFrames) {
+  let num = String(i).padStart(3, '0');
+  let img = new Image();
+  img.src = `sprite/bola-quicando/ezgif-frame-${num}.png?v=6`;
+  ballSprites.push(img);
+}
+
 // ==========================================
 // 4. CLASSE DE ITENS E OBSTÁCULOS
 // ==========================================
@@ -508,16 +563,47 @@ class GameItem {
     this.isGood = data.isGood;
     this.color = data.color;
     this.penalty = data.penalty || 0;
+    this.points = data.points || 10;
 
     // Configuração de coordenadas
     this.width = 44;
     this.height = 44;
     this.x = canvasWidth + 50;
+    this.scale = 1.0;
 
-    // Altura de spawn: Cacto e Gato sempre no chão, sem bolha
-    if (this.name === 'Cacto' || this.name === 'Gato') {
+    // Altura de spawn: Cacto, Gato, Bola e Tronco sempre no chão, sem bolha
+    if (this.name === 'Cacto' || this.name === 'Gato' || this.name === 'Bola' || this.name === 'Tronco') {
       this.y = canvasHeight - 65; // Nível do chão
       this.isOnRoad = true;
+      if (this.name === 'Cacto' && Math.random() < 0.4) {
+        this.scale = 1.5 + Math.random() * 0.6; // Entre 1.5x e 2.1x maior
+      }
+      if (this.name === 'Gato') {
+        this.frameIndex = 0;
+        this.frameTimer = 0;
+        this.isScared = false;
+
+        const catTypes = ['normal', 'preto', 'branco'];
+        this.catColor = catTypes[Math.floor(Math.random() * catTypes.length)];
+
+        // Física para pulo aleatório
+        this.groundY = canvasHeight - 65;
+        this.vy = 0;
+        this.gravity = 0.55;
+        this.isJumping = false;
+        this.jumpCooldown = Math.floor(Math.random() * 60) + 30;
+      }
+
+      if (this.name === 'Bola') {
+        this.frameIndex = 0;
+        this.frameTimer = 0;
+        this.isOnRoad = true;
+      }
+
+      if (this.name === 'Tronco') {
+        this.isOnRoad = true;
+        this.scale = 1.0;
+      }
     } else {
       const spawnHigh = Math.random() < 0.35;
       this.y = spawnHigh ? canvasHeight - 130 : canvasHeight - 65;
@@ -526,16 +612,40 @@ class GameItem {
   }
 
   update(speed) {
-    this.x -= speed;
+    if (this.name === 'Gato') {
+      this.x -= (speed + 2.5); // Gato corre ativamente em direção ao cachorro
+
+      // Lógica de pulo aleatório
+      if (!this.isJumping) {
+        this.jumpCooldown--;
+        // Só tenta pular se não estiver assustado (opcional) para não estragar a animação de susto, ou pode pular assustado também.
+        if (this.jumpCooldown <= 0 && Math.random() < 0.4) {
+          this.isJumping = true;
+          this.vy = -(8 + Math.random() * 5); // Pulo aleatório (um pouco mais alto/baixo)
+          this.jumpCooldown = Math.floor(Math.random() * 90) + 50; // Tempo até o próximo pulo
+        }
+      } else {
+        this.vy += this.gravity;
+        this.y += this.vy;
+
+        if (this.y >= this.groundY) {
+          this.y = this.groundY;
+          this.vy = 0;
+          this.isJumping = false;
+        }
+      }
+    } else if (this.name === 'Bola') {
+      this.x -= (speed * 0.65); // Bola aparece de forma mais lenta
+    } else {
+      this.x -= speed;
+    }
   }
 
-  draw(ctx) {
+  draw(ctx, dog, isPaused = false) {
     ctx.save();
 
     if (!this.isOnRoad) {
-      // Efeito de brilho/halo em volta do token
-      ctx.shadowBlur = 12;
-      ctx.shadowColor = this.color;
+      // Remover shadowBlur pesado que causa lentidão
 
       // Círculo base Glassmorphic
       ctx.fillStyle = 'rgba(17, 24, 39, 0.85)';
@@ -546,29 +656,89 @@ class GameItem {
       ctx.arc(this.x, this.y, 22, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
-
-      // Remover o efeito de sombra para desenhar o texto (evita borrão)
-      ctx.shadowBlur = 0;
     }
 
     // Desenhar Emoji do Item
     ctx.globalAlpha = 1.0;
     ctx.fillStyle = '#000000'; // Reseta o fillStyle para opaco total
-    ctx.font = this.isOnRoad ? '36px Arial' : '22px Arial';
+    ctx.font = this.isOnRoad ? `${Math.floor(36 * this.scale)}px Arial` : '22px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    
-    // Animação para o gato (quicando)
+
     let emojiY = this.y;
-    if (this.name === 'Gato') {
-      emojiY += Math.sin(Date.now() * 0.015) * 12;
+    if (this.isOnRoad) {
+      emojiY -= 15 * this.scale; // Ajuste visual para apoiar o emoji maior no chão
     }
 
-    if (this.isOnRoad) {
-      emojiY -= 15; // Ajuste visual para apoiar o emoji maior no chão
+    if (this.name === 'Gato') {
+      if (!isPaused) {
+        this.frameTimer++;
+      }
+
+      // Checar distância pro dog para mudar estado
+      let distanceToDog = 9999;
+      if (dog) {
+        distanceToDog = this.x - dog.x; // Distância horizontal
+      }
+
+      // Assusta se chegar a menos de 280px
+      if (distanceToDog > 0 && distanceToDog < 280) {
+        this.isScared = true;
+      }
+
+      let currentArray = this.isScared ? catSprites[this.catColor].scared : catSprites[this.catColor].walk;
+      let frameSpeed = this.isScared ? 2 : 3;
+
+      if (this.frameTimer > frameSpeed) {
+        this.frameTimer = 0;
+        this.frameIndex++;
+        if (this.frameIndex >= currentArray.length) {
+          if (this.isScared) {
+            this.frameIndex = currentArray.length - 1; // Trava no último frame do susto
+          } else {
+            this.frameIndex = 0; // Loop na caminhada
+          }
+        }
+      }
+
+      let img = currentArray[this.frameIndex];
+      if (img && img.complete && img.naturalWidth > 0) {
+        let scale = 0.45; // Escala ideal para imagens de 250px
+        let sw = img.naturalWidth * scale;
+        let sh = img.naturalHeight * scale;
+
+        ctx.drawImage(img, this.x - sw / 2, this.y - sh + 20, sw, sh);
+      }
+    } else if (this.name === 'Bola') {
+      if (!isPaused) {
+        this.frameTimer++;
+      }
+      let currentArray = ballSprites;
+      let frameSpeed = 9; // <--- AQUI: Animação bem mais lenta (quanto maior, mais lento)
+
+      if (this.frameTimer > frameSpeed) {
+        this.frameTimer = 0;
+        this.frameIndex = (this.frameIndex + 1) % currentArray.length;
+      }
+
+      let img = currentArray[this.frameIndex];
+      if (img && img.complete && img.naturalWidth > 0) {
+        let scale = 0.22; // Escala ajustada para ficar proporcional ao cachorro
+        let sw = img.naturalWidth * scale;
+        let sh = img.naturalHeight * scale;
+        // As imagens já tem a altura do pulo no frame, basta colar próximo ao chão
+        ctx.drawImage(img, this.x - sw / 2, this.y - sh + 15, sw, sh);
+      }
+    } else if (this.name === 'Tronco') {
+      if (troncoImg && troncoImg.complete && troncoImg.naturalWidth > 0) {
+        let scale = 0.22; // Escala da imagem do tronco
+        let sw = troncoImg.naturalWidth * scale;
+        let sh = troncoImg.naturalHeight * scale;
+        ctx.drawImage(troncoImg, this.x - sw / 2, this.y - sh + 20, sw, sh);
+      }
+    } else {
+      ctx.fillText(this.emoji, this.x, emojiY);
     }
-    
-    ctx.fillText(this.emoji, this.x, emojiY);
 
     if (!this.isOnRoad) {
       // Rótulo Educativo (Texto explicativo embaixo do item)
@@ -596,7 +766,10 @@ class GameItem {
 
     // Ponto central do item
     const itemCX = this.x;
-    const itemCY = this.y;
+    let itemCY = this.y;
+    if (this.isOnRoad && this.scale > 1.0) {
+      itemCY -= 15 * (this.scale - 1); // Ajustar centro para itens maiores no chão
+    }
 
     // Distância euclidiana com raio proporcional ao tamanho do sprite
     const dx = dogCX - itemCX;
@@ -604,19 +777,19 @@ class GameItem {
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     // Raio de colisão generoso mas proporcional ao sprite
-    return distance < (spriteW * 0.32 + 20);
+    return distance < (spriteW * 0.32 + 20 * this.scale);
   }
 }
 
 // Catálogo de Itens
 const ITEM_POOL = [
   // Bons (Saúde ✅)
-  { name: 'Peso Ideal', emoji: '⚖️', isGood: true, color: '#10b981' },
-  { name: 'Ex. Moderado', emoji: '🐕', isGood: true, color: '#10b981' },
-  { name: 'Fisioterapia', emoji: '👐', isGood: true, color: '#10b981' },
-  { name: 'Natação', emoji: '🏊', isGood: true, color: '#10b981' },
-  { name: 'Condroprotetor', emoji: '💊', isGood: true, color: '#10b981' },
-  { name: 'Consulta Vet', emoji: '🩺', isGood: true, color: '#10b981' },
+  { name: 'Peso Ideal', emoji: '⚖️', isGood: true, color: '#10b981', points: 10 },
+  { name: 'Ex. Moderado', emoji: '🐕', isGood: true, color: '#10b981', points: 10 },
+  { name: 'Fisioterapia', emoji: '👐', isGood: true, color: '#10b981', points: 15 },
+  { name: 'Natação', emoji: '🏊', isGood: true, color: '#10b981', points: 15 },
+  { name: 'Condroprotetor', emoji: '💊', isGood: true, color: '#10b981', points: 20 },
+  { name: 'Consulta Vet', emoji: '🩺', isGood: true, color: '#10b981', points: 25 },
 
   // Ruins (Perigos ❌)
   { name: 'Obesidade', emoji: '🍔', isGood: false, color: '#ef4444', penalty: 10 },
@@ -625,7 +798,9 @@ const ITEM_POOL = [
   { name: 'Saltos Altos', emoji: '🪜', isGood: false, color: '#ef4444', penalty: 10 },
   { name: 'Piso Liso', emoji: '💦', isGood: false, color: '#ef4444', penalty: 10 },
   { name: 'Cacto', emoji: '🌵', isGood: false, color: '#ef4444', penalty: 15 },
-  { name: 'Gato', emoji: '🐈', isGood: false, color: '#ef4444', penalty: 20 }
+  { name: 'Gato', emoji: '🐈', isGood: false, color: '#ef4444', penalty: 20 },
+  { name: 'Bola', emoji: '⚽', isGood: false, color: '#ef4444', penalty: 15 },
+  { name: 'Tronco', emoji: '🪵', isGood: false, color: '#8B4513', penalty: 20 }
 ];
 
 const GAME_TIPS = [
@@ -662,6 +837,26 @@ class GameEngine {
     document.getElementById('btnContinue').addEventListener('pointerdown', (e) => this.resumeGame(e));
     document.getElementById('btnRestart').addEventListener('pointerdown', (e) => this.restartGame(e));
 
+    this.btnFs = document.getElementById('btnFullscreen');
+    if (this.btnFs) {
+      this.btnFs.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        this.toggleFullscreen();
+      });
+    }
+
+    // Trocar ícone quando estado de fullscreen mudar
+    document.addEventListener('fullscreenchange', () => {
+      this.updateFullscreenIcon(!!document.fullscreenElement);
+    });
+
+    // Criar o botão de pausa via JS para garantir que exista sem problemas de cache
+    this.btnPause = document.createElement('button');
+    this.btnPause.id = 'btnPause';
+    this.btnPause.style.cssText = "position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; padding: 8px 20px; background: rgba(17, 24, 39, 0.85); color: #fff; border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 20px; cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: bold; font-size: 1rem; backdrop-filter: blur(4px); display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.5);";
+    document.getElementById('canvasContainer').appendChild(this.btnPause);
+    this.btnPause.addEventListener('pointerdown', (e) => this.togglePause(e));
+
     // Ouvir Toque Geral para Pular
     document.body.addEventListener('pointerdown', (e) => this.handleActionInput(e));
     window.addEventListener('keydown', (e) => {
@@ -680,8 +875,8 @@ class GameEngine {
     // Estatísticas da Partida
     this.score = 0;
     this.life = 100;
-    this.speed = 2.5;
-    this.maxSpeed = 18.0;
+    this.speed = 3.0;
+    this.maxSpeed = 15.0;
     this.stage = 'Filhote';
 
     // Clima
@@ -703,6 +898,15 @@ class GameEngine {
       { x: 700, y: 30, size: 25, speed: 0.2 }
     ];
 
+    // Árvores de Fundo (Cenário Floresta)
+    this.bgTrees = [
+      { x: 100, scale: 0.8 },
+      { x: 400, scale: 1.1 },
+      { x: 700, scale: 0.9 },
+      { x: 1000, scale: 1.0 },
+      { x: 1300, scale: 0.7 }
+    ];
+
     // Ajustar tamanho do Canvas
     this.resizeCanvas();
     window.addEventListener('resize', () => this.resizeCanvas());
@@ -713,13 +917,26 @@ class GameEngine {
   }
 
   resizeCanvas() {
-    // Ajustar de forma responsiva mantendo proporção desejada de 800x300
     const parent = this.canvas.parentElement;
-    this.canvas.width = parent.clientWidth;
-    this.canvas.height = parent.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    
+    // Configurar tamanho lógico do jogo
+    this.gameWidth = parent.clientWidth;
+    this.gameHeight = parent.clientHeight;
+    
+    // Configurar tamanho CSS real
+    this.canvas.style.width = this.gameWidth + 'px';
+    this.canvas.style.height = this.gameHeight + 'px';
+    
+    // Ajustar buffers internos para o DPR (alta resolução)
+    this.canvas.width = this.gameWidth * dpr;
+    this.canvas.height = this.gameHeight * dpr;
+    
+    // Scale do canvas para desenhar corretamente sem mudar lógica de código
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     if (this.dog) {
-      this.dog.groundY = this.canvas.height - 65;
+      this.dog.groundY = this.gameHeight - 65;
       if (this.state === 'START') {
         this.dog.y = this.dog.groundY;
       }
@@ -745,6 +962,7 @@ class GameEngine {
     this.speed = 2.5;
     this.stage = 'Filhote';
     this.dog.stage = 'Filhote';
+
     this.items = [];
     this.particles = [];
     this.floatingTexts = [];
@@ -755,6 +973,8 @@ class GameEngine {
     this.updateHUD();
     this.scoreVal.textContent = '0000';
     sounds.playCollect();
+    this.btnPause.style.display = 'block';
+    this.btnPause.textContent = '⏸ PAUSAR';
   }
 
   resumeGame(e) {
@@ -765,6 +985,8 @@ class GameEngine {
     // Efeito de recuperação leve ao evoluir
     this.life = Math.min(100, this.life + 15);
     this.updateHUD();
+    this.btnPause.style.display = 'block';
+    this.btnPause.textContent = '⏸ PAUSAR';
   }
 
   restartGame(e) {
@@ -795,11 +1017,84 @@ class GameEngine {
     this.updateHUD();
     this.scoreVal.textContent = '0000';
     this.startOverlay.classList.add('active');
+    this.btnPause.style.display = 'none';
+  }
+
+  updateFullscreenIcon(isFullscreen) {
+    if (!this.btnFs) return;
+    if (isFullscreen) {
+      // Ícone de "Sair da Tela Cheia" (setas apontando para dentro)
+      this.btnFs.innerHTML = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 4 15 10 21 10"></polyline>
+          <line x1="21" y1="4" x2="15" y2="10"></line>
+          <polyline points="9 4 9 10 3 10"></polyline>
+          <line x1="3" y1="4" x2="9" y2="10"></line>
+          <polyline points="15 20 15 14 21 14"></polyline>
+          <line x1="21" y1="20" x2="15" y2="14"></line>
+          <polyline points="9 20 9 14 3 14"></polyline>
+          <line x1="3" y1="20" x2="9" y2="14"></line>
+        </svg>
+      `;
+    } else {
+      // Ícone padrão de Tela Cheia (setas apontando para fora)
+      this.btnFs.innerHTML = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="14" y1="10" x2="21" y2="3"></line>
+          <polyline points="9 3 3 3 3 9"></polyline>
+          <line x1="10" y1="10" x2="3" y2="3"></line>
+          <polyline points="15 21 21 21 21 15"></polyline>
+          <line x1="14" y1="14" x2="21" y2="21"></line>
+          <polyline points="9 21 3 21 3 15"></polyline>
+          <line x1="10" y1="14" x2="3" y2="21"></line>
+        </svg>
+      `;
+    }
+  }
+
+  toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        // Tenta travar a rotação no mobile para modo deitado (Landscape)
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(err => {
+            console.warn(`Aviso de rotação: ${err.message}`);
+          });
+        }
+      }).catch(err => {
+        console.warn(`Erro ao tentar ativar tela cheia: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().then(() => {
+          // Destrava a rotação ao sair da tela cheia
+          if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+          }
+        });
+      }
+    }
+  }
+
+  togglePause(e) {
+    if (e) e.stopPropagation();
+    if (this.state === 'PLAYING') {
+      this.state = 'PAUSED';
+      this.btnPause.textContent = '▶ CONTINUAR';
+      const bgMusic = document.getElementById('bgMusic');
+      if (bgMusic) bgMusic.pause();
+    } else if (this.state === 'PAUSED') {
+      this.state = 'PLAYING';
+      this.btnPause.textContent = '⏸ PAUSAR';
+      const bgMusic = document.getElementById('bgMusic');
+      if (bgMusic) bgMusic.play();
+    }
   }
 
   handleActionInput(e) {
     // Evita pulos acidentais ao tocar em botões de overlay
-    if (e.target.closest('.btn') || e.target.closest('.overlay.active')) {
+    if (e.target.closest('.btn') || e.target.closest('.overlay.active') || e.target.id === 'btnPause') {
       return;
     }
 
@@ -823,6 +1118,19 @@ class GameEngine {
     }
 
     this.render();
+
+    if (this.state === 'PAUSED') {
+      this.ctx.save();
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      this.ctx.fillRect(0, 0, this.gameWidth, this.gameHeight);
+      this.ctx.fillStyle = '#fff';
+      this.ctx.font = 'bold 36px Outfit';
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText('JOGO PAUSADO', this.gameWidth / 2, this.gameHeight / 2);
+      this.ctx.restore();
+    }
+
     requestAnimationFrame((t) => this.gameLoop(t));
   }
 
@@ -835,10 +1143,16 @@ class GameEngine {
     this.scoreVal.textContent = String(Math.floor(this.score)).padStart(4, '0');
 
     // Aumento suave de velocidade conforme score
-    let speedMult = 0.0035;
-    if (this.stage === 'Mestre da Agilidade') speedMult = 0.005;
-    if (this.stage === 'Lenda Canina') speedMult = 0.007;
-    this.speed = Math.min(this.maxSpeed, 2.5 + (this.score * speedMult));
+    let speedMult = 0.0045;
+    if (this.stage === 'Mestre da Agilidade') speedMult = 0.004;
+
+    // O multiplicador deve ser o mesmo da penúltima fase para manter a velocidade!
+    if (this.stage === 'Lenda Canina' || this.stage === 'Explorador da Floresta' || this.stage === 'Surfista da Praia') speedMult = 0.004;
+
+    // Trava o score usado para o cálculo de velocidade para não ficar impossível
+    // Mantém a velocidade constante a partir de 1800 pontos (mesma da penúltima fase)
+    let effectiveScore = Math.min(this.score, 1800);
+    this.speed = Math.min(this.maxSpeed, 2.5 + (effectiveScore * speedMult));
 
     // 3. Controle de Níveis (Progressão)
     this.checkEvolution();
@@ -847,24 +1161,58 @@ class GameEngine {
     this.clouds.forEach(cloud => {
       cloud.x -= cloud.speed + (this.speed * 0.02);
       if (cloud.x + cloud.size * 2 < 0) {
-        cloud.x = this.canvas.width + Math.random() * 100;
+        cloud.x = this.gameWidth + Math.random() * 100;
         cloud.y = Math.random() * 70 + 20;
       }
     });
+
+    // 4.5. Mover Árvores de Fundo se estiver na Floresta
+    if (this.stage === 'Explorador da Floresta') {
+      this.bgTrees.forEach(tree => {
+        tree.x -= this.speed * 0.5; // Efeito parallax
+        if (tree.x + 150 < 0) {
+          tree.x = this.gameWidth + Math.random() * 200;
+          tree.scale = 0.7 + Math.random() * 0.5; // Variar tamanho a cada reset
+        }
+      });
+    }
 
     // 5. Spawn procedimental de Itens / Obstáculos
     this.spawnTimer++;
     if (this.spawnTimer >= this.spawnInterval) {
       this.spawnTimer = 0;
       // Escolher um item aleatório do catálogo
-      const randomItemData = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
-      this.items.push(new GameItem(this.canvas.width, this.canvas.height, randomItemData));
+      let randomItemData = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
+
+      const forbiddenBolaStages = ['Filhote', 'Jovem', 'Adulto saudável', 'Explorador da Floresta'];
+      const forbiddenTroncoStages = ['Filhote', 'Jovem', 'Surfista da Praia'];
+
+      // Remove Cacto na Praia, Bola nas fases proibidas e Tronco nas fases proibidas
+      while (
+        (this.stage === 'Surfista da Praia' && randomItemData.name === 'Cacto') ||
+        (forbiddenBolaStages.includes(this.stage) && randomItemData.name === 'Bola') ||
+        (forbiddenTroncoStages.includes(this.stage) && randomItemData.name === 'Tronco')
+      ) {
+        randomItemData = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
+      }
+
+      // Override na fase da floresta para colocar o tronco mais vezes
+      if (this.stage === 'Explorador da Floresta' && Math.random() < 0.35) {
+        randomItemData = { name: 'Tronco', emoji: '🪵', isGood: false, points: 0, penalty: 20, color: '#8B4513' };
+      }
+
+      // Override na fase da praia para colocar a bola
+      if (this.stage === 'Surfista da Praia' && Math.random() < 0.4) {
+        randomItemData = { name: 'Bola', emoji: '', isGood: false, points: 0, penalty: 30, color: '#ef4444' };
+      }
+
+      this.items.push(new GameItem(this.gameWidth, this.gameHeight, randomItemData));
 
       // Ajustar intervalo de spawn de acordo com velocidade
       let baseInterval = 140;
       let minInterval = 90;
       if (this.stage === 'Mestre da Agilidade') { baseInterval = 100; minInterval = 50; }
-      if (this.stage === 'Lenda Canina') { baseInterval = 80; minInterval = 40; }
+      if (this.stage === 'Lenda Canina' || this.stage === 'Explorador da Floresta' || this.stage === 'Surfista da Praia') { baseInterval = 100; minInterval = 50; }
       this.spawnInterval = Math.max(minInterval, baseInterval - Math.floor(this.speed * 8));
     }
 
@@ -913,31 +1261,31 @@ class GameEngine {
     if (this.stage === 'Mestre da Agilidade' || this.stage === 'Lenda Canina') {
       if (Math.random() < 0.4) {
         this.rainParticles.push({
-            x: Math.random() * this.canvas.width + 200,
-            y: -10,
-            vy: 15 + Math.random() * 10,
-            vx: -3 - Math.random() * 3,
-            length: 15 + Math.random() * 20
+          x: Math.random() * this.gameWidth + 200,
+          y: -10,
+          vy: 15 + Math.random() * 10,
+          vx: -3 - Math.random() * 3,
+          length: 15 + Math.random() * 20
         });
       }
       for (let i = this.rainParticles.length - 1; i >= 0; i--) {
         const rp = this.rainParticles[i];
         rp.x += rp.vx;
         rp.y += rp.vy;
-        if (rp.y > this.canvas.height) {
-            this.rainParticles.splice(i, 1);
+        if (rp.y > this.gameHeight) {
+          this.rainParticles.splice(i, 1);
         }
       }
       if (this.stage === 'Lenda Canina') {
         if (this.lightningTimer > 0) this.lightningTimer--;
         else if (Math.random() < 0.015) {
-            this.lightningTimer = 15 + Math.random() * 10;
+          this.lightningTimer = 15 + Math.random() * 10;
         }
       }
     }
 
-    // 9. Verificar condição de vitória (máximo de 3000 pontos)
-    if (this.score >= 3000) {
+    // 9. Verificar condição de vitória (máximo de 6000 pontos)
+    if (this.score >= 6000) {
       this.triggerGameOver(true);
     }
   }
@@ -946,14 +1294,14 @@ class GameEngine {
   handleCollision(item) {
     if (item.isGood) {
       // Coleta Positiva
-      this.score += 10;
+      this.score += item.points;
       this.life = Math.min(100, this.life + 12);
       sounds.playCollect();
       this.createParticlesBurst(item.x, item.y, '#10b981', true);
       this.triggerFlashEffect(false);
-      
+
       // Criar texto flutuante com a pontuação ganha
-      this.floatingTexts.push(new FloatingText(item.x, item.y - 20, '+10', '#10b981'));
+      this.floatingTexts.push(new FloatingText(item.x, item.y - 20, `+${item.points}`, '#10b981'));
     } else {
       // Impacto Negativo
       this.life = Math.max(0, this.life - 25);
@@ -1011,15 +1359,23 @@ class GameEngine {
     let eduMsg = '';
     let hasEvolved = false;
 
-    if (this.score >= 2000 && this.stage !== 'Lenda Canina') {
+    if (this.score >= 5000 && this.stage !== 'Surfista da Praia') {
+      targetStage = 'Surfista da Praia';
+      eduMsg = "A areia exige mais das articulações, mas seu Cão Surfista está preparado! Graças aos cuidados contínuos, ele curte a praia com total saúde e energia.";
+      hasEvolved = true;
+    } else if (this.score >= 4000 && this.score < 5000 && this.stage !== 'Explorador da Floresta') {
+      targetStage = 'Explorador da Floresta';
+      eduMsg = "Desbravando trilhas e obstáculos naturais! A prevenção fez do seu cão um Explorador da Floresta imbatível e cheio de vigor.";
+      hasEvolved = true;
+    } else if (this.score >= 2500 && this.score < 4000 && this.stage !== 'Lenda Canina') {
       targetStage = 'Lenda Canina';
       eduMsg = "Uma verdadeira Lenda Canina! Seu cachorro provou que com prevenção e cuidado é possível desafiar os limites do tempo sem comprometer a saúde articular.";
       hasEvolved = true;
-    } else if (this.score >= 1000 && this.score < 2000 && this.stage !== 'Mestre da Agilidade') {
+    } else if (this.score >= 1500 && this.score < 2500 && this.stage !== 'Mestre da Agilidade') {
       targetStage = 'Mestre da Agilidade';
       eduMsg = "Incrível! Manter esse ritmo com exercícios sem impacto fez seu cão virar um Mestre da Agilidade, com quadris fortes e saudáveis.";
       hasEvolved = true;
-    } else if (this.score >= 450 && this.score < 1000 && this.stage !== 'Campeão da Mobilidade') {
+    } else if (this.score >= 450 && this.score < 1500 && this.stage !== 'Campeão da Mobilidade') {
       targetStage = 'Campeão da Mobilidade';
       eduMsg = "Sensacional! Com fisioterapia, exercícios adequados e visitas frequentes ao veterinário, seu amiguinho viverá livre de dores coxofemorais!";
       hasEvolved = true;
@@ -1048,11 +1404,15 @@ class GameEngine {
       else if (targetStage === 'Adulto saudável') evolutionEmojiEl.textContent = '🐕‍🦺';
       else if (targetStage === 'Campeão da Mobilidade') evolutionEmojiEl.textContent = '🏆';
       else if (targetStage === 'Mestre da Agilidade') evolutionEmojiEl.textContent = '⚡';
+      else if (targetStage === 'Lenda Canina') evolutionEmojiEl.textContent = '🌟';
+      else if (targetStage === 'Explorador da Floresta') evolutionEmojiEl.textContent = '🌲';
+      else if (targetStage === 'Surfista da Praia') evolutionEmojiEl.textContent = '🌊';
       else evolutionEmojiEl.textContent = '🌟';
 
       this.levelUpOverlay.classList.add('active');
       this.updateHUD();
       sounds.playLevelUp();
+      this.btnPause.style.display = 'none';
     }
   }
 
@@ -1092,12 +1452,12 @@ class GameEngine {
     const tipDescEl = document.getElementById('gameOverTip');
 
     if (isVictory) {
-      this.score = 3000;
-      this.scoreVal.textContent = '3000';
+      this.score = 6000;
+      this.scoreVal.textContent = '6000';
 
-      titleEl.innerHTML = 'Obrigado por jogar! 🌟';
+      titleEl.innerHTML = 'Obrigado por jogar! 🌊';
       titleEl.style.color = 'var(--primary)';
-      descEl.textContent = 'Você atingiu o limite de 3000 pontos e completou a jornada suprema de mobilidade!';
+      descEl.textContent = 'Você atingiu o limite de 6000 pontos e completou a jornada suprema de mobilidade, até na areia da praia!';
 
       tipTitleEl.textContent = '🏆 Conquista Máxima';
       tipDescEl.textContent = 'Seu cão se tornou um Campeão da Mobilidade Supremo! Continue aplicando esses cuidados de controle de peso, exercícios moderados e consultas veterinárias na vida real.';
@@ -1119,6 +1479,7 @@ class GameEngine {
     document.getElementById('recapLevel').textContent = this.stage;
 
     this.gameOverOverlay.classList.add('active');
+    this.btnPause.style.display = 'none';
   }
 
   // ==========================================
@@ -1140,7 +1501,7 @@ class GameEngine {
     // 1.5. Clarão de Raio (se houver)
     if (this.lightningTimer > 0) {
       this.ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, this.lightningTimer / 15)})`;
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.fillRect(0, 0, this.gameWidth, this.gameHeight);
     }
 
     // 2. Desenhar Nuvens de Fundo
@@ -1157,11 +1518,17 @@ class GameEngine {
     // 3. Desenhar Montanhas de Fundo (Parallax Lento)
     this.drawMountains();
 
+    // 3.5. Desenhar Árvores de Fundo (Cenário Floresta)
+    if (this.stage === 'Explorador da Floresta') {
+      this.drawBgTrees();
+    }
+
     // 4. Desenhar o Solo / Estrada
     this.drawGround();
 
     // 5. Desenhar Itens
-    this.items.forEach(item => item.draw(this.ctx));
+    const isPaused = this.state === 'PAUSED';
+    this.items.forEach(item => item.draw(this.ctx, this.dog, isPaused));
 
     // 6. Desenhar Partículas
     this.particles.forEach(p => p.draw(this.ctx));
@@ -1179,7 +1546,7 @@ class GameEngine {
   }
 
   drawSkyGradient() {
-    const grad = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+    const grad = this.ctx.createLinearGradient(0, 0, 0, this.gameHeight);
 
     if (this.stage === 'Filhote') {
       // Amanhecer Pastel
@@ -1205,19 +1572,65 @@ class GameEngine {
       grad.addColorStop(1, '#1e293b'); // Cinza azulado chão
     } else if (this.stage === 'Mestre da Agilidade') {
       // Chuva Cinzenta
-      grad.addColorStop(0, '#334155'); 
-      grad.addColorStop(0.5, '#475569'); 
+      grad.addColorStop(0, '#334155');
+      grad.addColorStop(0.5, '#475569');
       grad.addColorStop(1, '#94a3b8');
-    } else {
+    } else if (this.stage === 'Lenda Canina') {
       // Tempestade Escura (Lenda Canina)
-      grad.addColorStop(0, '#020617'); 
-      grad.addColorStop(0.4, '#0f172a'); 
-      grad.addColorStop(0.8, '#1e293b'); 
+      grad.addColorStop(0, '#020617');
+      grad.addColorStop(0.4, '#0f172a');
+      grad.addColorStop(0.8, '#1e293b');
       grad.addColorStop(1, '#475569');
+    } else if (this.stage === 'Explorador da Floresta') {
+      // Floresta Dourada
+      grad.addColorStop(0, '#064e3b');
+      grad.addColorStop(0.5, '#047857');
+      grad.addColorStop(1, '#fef08a');
+    } else {
+      // Praia Ensolarada
+      grad.addColorStop(0, '#0ea5e9');
+      grad.addColorStop(0.5, '#38bdf8');
+      grad.addColorStop(1, '#fde047');
     }
 
     this.ctx.fillStyle = grad;
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillRect(0, 0, this.gameWidth, this.gameHeight);
+  }
+
+  drawBgTrees() {
+    this.ctx.save();
+    this.bgTrees.forEach(tree => {
+      this.ctx.translate(tree.x, this.gameHeight - 65);
+      this.ctx.scale(tree.scale, tree.scale);
+      
+      // Tronco da árvore
+      this.ctx.fillStyle = '#271911'; // Marrom bem escuro
+      this.ctx.fillRect(-15, -120, 30, 120);
+
+      // Copas da árvore (pinheiro)
+      this.ctx.fillStyle = '#064e3b'; // Verde escuro da floresta
+      this.ctx.beginPath();
+      this.ctx.moveTo(-60, -80);
+      this.ctx.lineTo(0, -180);
+      this.ctx.lineTo(60, -80);
+      this.ctx.fill();
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(-50, -130);
+      this.ctx.lineTo(0, -220);
+      this.ctx.lineTo(50, -130);
+      this.ctx.fill();
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(-40, -170);
+      this.ctx.lineTo(0, -260);
+      this.ctx.lineTo(40, -170);
+      this.ctx.fill();
+
+      this.ctx.scale(1 / tree.scale, 1 / tree.scale);
+      this.ctx.translate(-tree.x, -(this.gameHeight - 65));
+    });
+    this.ctx.restore();
   }
 
   drawMountains() {
@@ -1239,19 +1652,26 @@ class GameEngine {
     } else if (this.stage === 'Mestre da Agilidade') {
       mountColor1 = 'rgba(51, 65, 85, 0.4)';
       mountColor2 = 'rgba(71, 85, 105, 0.3)';
-    } else {
+    } else if (this.stage === 'Lenda Canina') {
       mountColor1 = 'rgba(2, 6, 23, 0.5)';
       mountColor2 = 'rgba(15, 23, 42, 0.4)';
+    } else if (this.stage === 'Explorador da Floresta') {
+      mountColor1 = 'rgba(20, 83, 45, 0.5)';
+      mountColor2 = 'rgba(22, 101, 52, 0.4)';
+    } else {
+      // Praia (Ilhas distantes)
+      mountColor1 = 'rgba(8, 145, 178, 0.4)';
+      mountColor2 = 'rgba(6, 182, 212, 0.3)';
     }
 
-    const midY = this.canvas.height - 65;
+    const midY = this.gameHeight - 65;
 
     // Linha 1: Montanhas distantes (se movem bem devagar)
     this.ctx.fillStyle = mountColor1;
     this.ctx.beginPath();
     this.ctx.moveTo(0, midY);
     // Gerar cumes simples
-    const w = this.canvas.width;
+    const w = this.gameWidth;
     this.ctx.lineTo(w * 0.15, midY - 60);
     this.ctx.lineTo(w * 0.35, midY - 20);
     this.ctx.lineTo(w * 0.60, midY - 80);
@@ -1277,14 +1697,20 @@ class GameEngine {
     this.ctx.save();
 
     const groundHeight = 65;
-    const y = this.canvas.height - groundHeight;
-    const w = this.canvas.width;
+    const y = this.gameHeight - groundHeight;
+    const w = this.gameWidth;
 
     // Solo sólido
-    const groundGrad = this.ctx.createLinearGradient(0, y, 0, this.canvas.height);
+    const groundGrad = this.ctx.createLinearGradient(0, y, 0, this.gameHeight);
     if (this.stage === 'Campeão da Mobilidade') {
       groundGrad.addColorStop(0, '#1e293b');
       groundGrad.addColorStop(1, '#0f172a');
+    } else if (this.stage === 'Explorador da Floresta') {
+      groundGrad.addColorStop(0, '#3f6212');
+      groundGrad.addColorStop(1, '#166534');
+    } else if (this.stage === 'Surfista da Praia') {
+      groundGrad.addColorStop(0, '#fde047');
+      groundGrad.addColorStop(1, '#fef08a');
     } else {
       groundGrad.addColorStop(0, '#1e293b');
       groundGrad.addColorStop(1, '#0f172a');
@@ -1294,7 +1720,13 @@ class GameEngine {
     this.ctx.fillRect(0, y, w, groundHeight);
 
     // Linha superior de borda (grama/asfalto)
-    this.ctx.strokeStyle = this.stage === 'Campeão da Mobilidade' ? '#10b981' : '#f59e0b';
+    if (this.stage === 'Surfista da Praia') {
+      this.ctx.strokeStyle = '#eab308';
+    } else if (this.stage === 'Explorador da Floresta') {
+      this.ctx.strokeStyle = '#65a30d';
+    } else {
+      this.ctx.strokeStyle = this.stage === 'Campeão da Mobilidade' ? '#10b981' : '#f59e0b';
+    }
     this.ctx.lineWidth = 4;
     this.ctx.beginPath();
     this.ctx.moveTo(0, y);
@@ -1318,37 +1750,37 @@ class GameEngine {
 
   drawWeather() {
     if (this.stage !== 'Mestre da Agilidade' && this.stage !== 'Lenda Canina') return;
-    
+
     this.ctx.save();
-    
+
     // Chuva
     this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
     this.ctx.lineWidth = 1.5;
     this.ctx.beginPath();
     this.rainParticles.forEach(rp => {
-        this.ctx.moveTo(rp.x, rp.y);
-        this.ctx.lineTo(rp.x - rp.vx * 1.5, rp.y - rp.length);
+      this.ctx.moveTo(rp.x, rp.y);
+      this.ctx.lineTo(rp.x - rp.vx * 1.5, rp.y - rp.length);
     });
     this.ctx.stroke();
 
     // Raio visual desenhado no fundo (Lenda Canina)
     if (this.stage === 'Lenda Canina' && this.lightningTimer > 18) {
-        this.ctx.strokeStyle = '#fef08a';
-        this.ctx.lineWidth = 3;
-        this.ctx.shadowBlur = 15;
-        this.ctx.shadowColor = '#fef08a';
-        this.ctx.beginPath();
-        let lx = this.canvas.width * 0.7 + (Math.random() * 200 - 100);
-        let ly = 0;
-        this.ctx.moveTo(lx, ly);
-        for (let i = 0; i < 5; i++) {
-            lx += (Math.random() * 80 - 40);
-            ly += (Math.random() * 50 + 20);
-            this.ctx.lineTo(lx, ly);
-        }
-        this.ctx.stroke();
+      this.ctx.strokeStyle = '#fef08a';
+      this.ctx.lineWidth = 3;
+      this.ctx.shadowBlur = 15;
+      this.ctx.shadowColor = '#fef08a';
+      this.ctx.beginPath();
+      let lx = this.gameWidth * 0.7 + (Math.random() * 200 - 100);
+      let ly = 0;
+      this.ctx.moveTo(lx, ly);
+      for (let i = 0; i < 5; i++) {
+        lx += (Math.random() * 80 - 40);
+        ly += (Math.random() * 50 + 20);
+        this.ctx.lineTo(lx, ly);
+      }
+      this.ctx.stroke();
     }
-    
+
     this.ctx.restore();
   }
 }
