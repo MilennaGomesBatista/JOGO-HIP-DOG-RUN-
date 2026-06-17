@@ -837,6 +837,19 @@ class GameEngine {
     document.getElementById('btnContinue').addEventListener('pointerdown', (e) => this.resumeGame(e));
     document.getElementById('btnRestart').addEventListener('pointerdown', (e) => this.restartGame(e));
 
+    this.btnFs = document.getElementById('btnFullscreen');
+    if (this.btnFs) {
+      this.btnFs.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        this.toggleFullscreen();
+      });
+    }
+
+    // Trocar ícone quando estado de fullscreen mudar
+    document.addEventListener('fullscreenchange', () => {
+      this.updateFullscreenIcon(!!document.fullscreenElement);
+    });
+
     // Criar o botão de pausa via JS para garantir que exista sem problemas de cache
     this.btnPause = document.createElement('button');
     this.btnPause.id = 'btnPause';
@@ -885,6 +898,15 @@ class GameEngine {
       { x: 700, y: 30, size: 25, speed: 0.2 }
     ];
 
+    // Árvores de Fundo (Cenário Floresta)
+    this.bgTrees = [
+      { x: 100, scale: 0.8 },
+      { x: 400, scale: 1.1 },
+      { x: 700, scale: 0.9 },
+      { x: 1000, scale: 1.0 },
+      { x: 1300, scale: 0.7 }
+    ];
+
     // Ajustar tamanho do Canvas
     this.resizeCanvas();
     window.addEventListener('resize', () => this.resizeCanvas());
@@ -895,13 +917,26 @@ class GameEngine {
   }
 
   resizeCanvas() {
-    // Ajustar de forma responsiva mantendo proporção desejada de 800x300
     const parent = this.canvas.parentElement;
-    this.canvas.width = parent.clientWidth;
-    this.canvas.height = parent.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    
+    // Configurar tamanho lógico do jogo
+    this.gameWidth = parent.clientWidth;
+    this.gameHeight = parent.clientHeight;
+    
+    // Configurar tamanho CSS real
+    this.canvas.style.width = this.gameWidth + 'px';
+    this.canvas.style.height = this.gameHeight + 'px';
+    
+    // Ajustar buffers internos para o DPR (alta resolução)
+    this.canvas.width = this.gameWidth * dpr;
+    this.canvas.height = this.gameHeight * dpr;
+    
+    // Scale do canvas para desenhar corretamente sem mudar lógica de código
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     if (this.dog) {
-      this.dog.groundY = this.canvas.height - 65;
+      this.dog.groundY = this.gameHeight - 65;
       if (this.state === 'START') {
         this.dog.y = this.dog.groundY;
       }
@@ -985,6 +1020,63 @@ class GameEngine {
     this.btnPause.style.display = 'none';
   }
 
+  updateFullscreenIcon(isFullscreen) {
+    if (!this.btnFs) return;
+    if (isFullscreen) {
+      // Ícone de "Sair da Tela Cheia" (setas apontando para dentro)
+      this.btnFs.innerHTML = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 4 15 10 21 10"></polyline>
+          <line x1="21" y1="4" x2="15" y2="10"></line>
+          <polyline points="9 4 9 10 3 10"></polyline>
+          <line x1="3" y1="4" x2="9" y2="10"></line>
+          <polyline points="15 20 15 14 21 14"></polyline>
+          <line x1="21" y1="20" x2="15" y2="14"></line>
+          <polyline points="9 20 9 14 3 14"></polyline>
+          <line x1="3" y1="20" x2="9" y2="14"></line>
+        </svg>
+      `;
+    } else {
+      // Ícone padrão de Tela Cheia (setas apontando para fora)
+      this.btnFs.innerHTML = `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="14" y1="10" x2="21" y2="3"></line>
+          <polyline points="9 3 3 3 3 9"></polyline>
+          <line x1="10" y1="10" x2="3" y2="3"></line>
+          <polyline points="15 21 21 21 21 15"></polyline>
+          <line x1="14" y1="14" x2="21" y2="21"></line>
+          <polyline points="9 21 3 21 3 15"></polyline>
+          <line x1="10" y1="14" x2="3" y2="21"></line>
+        </svg>
+      `;
+    }
+  }
+
+  toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        // Tenta travar a rotação no mobile para modo deitado (Landscape)
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(err => {
+            console.warn(`Aviso de rotação: ${err.message}`);
+          });
+        }
+      }).catch(err => {
+        console.warn(`Erro ao tentar ativar tela cheia: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().then(() => {
+          // Destrava a rotação ao sair da tela cheia
+          if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+          }
+        });
+      }
+    }
+  }
+
   togglePause(e) {
     if (e) e.stopPropagation();
     if (this.state === 'PLAYING') {
@@ -1030,12 +1122,12 @@ class GameEngine {
     if (this.state === 'PAUSED') {
       this.ctx.save();
       this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.fillRect(0, 0, this.gameWidth, this.gameHeight);
       this.ctx.fillStyle = '#fff';
       this.ctx.font = 'bold 36px Outfit';
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillText('JOGO PAUSADO', this.canvas.width / 2, this.canvas.height / 2);
+      this.ctx.fillText('JOGO PAUSADO', this.gameWidth / 2, this.gameHeight / 2);
       this.ctx.restore();
     }
 
@@ -1069,10 +1161,21 @@ class GameEngine {
     this.clouds.forEach(cloud => {
       cloud.x -= cloud.speed + (this.speed * 0.02);
       if (cloud.x + cloud.size * 2 < 0) {
-        cloud.x = this.canvas.width + Math.random() * 100;
+        cloud.x = this.gameWidth + Math.random() * 100;
         cloud.y = Math.random() * 70 + 20;
       }
     });
+
+    // 4.5. Mover Árvores de Fundo se estiver na Floresta
+    if (this.stage === 'Explorador da Floresta') {
+      this.bgTrees.forEach(tree => {
+        tree.x -= this.speed * 0.5; // Efeito parallax
+        if (tree.x + 150 < 0) {
+          tree.x = this.gameWidth + Math.random() * 200;
+          tree.scale = 0.7 + Math.random() * 0.5; // Variar tamanho a cada reset
+        }
+      });
+    }
 
     // 5. Spawn procedimental de Itens / Obstáculos
     this.spawnTimer++;
@@ -1103,7 +1206,7 @@ class GameEngine {
         randomItemData = { name: 'Bola', emoji: '', isGood: false, points: 0, penalty: 30, color: '#ef4444' };
       }
 
-      this.items.push(new GameItem(this.canvas.width, this.canvas.height, randomItemData));
+      this.items.push(new GameItem(this.gameWidth, this.gameHeight, randomItemData));
 
       // Ajustar intervalo de spawn de acordo com velocidade
       let baseInterval = 140;
@@ -1158,7 +1261,7 @@ class GameEngine {
     if (this.stage === 'Mestre da Agilidade' || this.stage === 'Lenda Canina') {
       if (Math.random() < 0.4) {
         this.rainParticles.push({
-          x: Math.random() * this.canvas.width + 200,
+          x: Math.random() * this.gameWidth + 200,
           y: -10,
           vy: 15 + Math.random() * 10,
           vx: -3 - Math.random() * 3,
@@ -1169,7 +1272,7 @@ class GameEngine {
         const rp = this.rainParticles[i];
         rp.x += rp.vx;
         rp.y += rp.vy;
-        if (rp.y > this.canvas.height) {
+        if (rp.y > this.gameHeight) {
           this.rainParticles.splice(i, 1);
         }
       }
@@ -1398,7 +1501,7 @@ class GameEngine {
     // 1.5. Clarão de Raio (se houver)
     if (this.lightningTimer > 0) {
       this.ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, this.lightningTimer / 15)})`;
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.fillRect(0, 0, this.gameWidth, this.gameHeight);
     }
 
     // 2. Desenhar Nuvens de Fundo
@@ -1414,6 +1517,11 @@ class GameEngine {
 
     // 3. Desenhar Montanhas de Fundo (Parallax Lento)
     this.drawMountains();
+
+    // 3.5. Desenhar Árvores de Fundo (Cenário Floresta)
+    if (this.stage === 'Explorador da Floresta') {
+      this.drawBgTrees();
+    }
 
     // 4. Desenhar o Solo / Estrada
     this.drawGround();
@@ -1438,7 +1546,7 @@ class GameEngine {
   }
 
   drawSkyGradient() {
-    const grad = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+    const grad = this.ctx.createLinearGradient(0, 0, 0, this.gameHeight);
 
     if (this.stage === 'Filhote') {
       // Amanhecer Pastel
@@ -1486,7 +1594,43 @@ class GameEngine {
     }
 
     this.ctx.fillStyle = grad;
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillRect(0, 0, this.gameWidth, this.gameHeight);
+  }
+
+  drawBgTrees() {
+    this.ctx.save();
+    this.bgTrees.forEach(tree => {
+      this.ctx.translate(tree.x, this.gameHeight - 65);
+      this.ctx.scale(tree.scale, tree.scale);
+      
+      // Tronco da árvore
+      this.ctx.fillStyle = '#271911'; // Marrom bem escuro
+      this.ctx.fillRect(-15, -120, 30, 120);
+
+      // Copas da árvore (pinheiro)
+      this.ctx.fillStyle = '#064e3b'; // Verde escuro da floresta
+      this.ctx.beginPath();
+      this.ctx.moveTo(-60, -80);
+      this.ctx.lineTo(0, -180);
+      this.ctx.lineTo(60, -80);
+      this.ctx.fill();
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(-50, -130);
+      this.ctx.lineTo(0, -220);
+      this.ctx.lineTo(50, -130);
+      this.ctx.fill();
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(-40, -170);
+      this.ctx.lineTo(0, -260);
+      this.ctx.lineTo(40, -170);
+      this.ctx.fill();
+
+      this.ctx.scale(1 / tree.scale, 1 / tree.scale);
+      this.ctx.translate(-tree.x, -(this.gameHeight - 65));
+    });
+    this.ctx.restore();
   }
 
   drawMountains() {
@@ -1520,14 +1664,14 @@ class GameEngine {
       mountColor2 = 'rgba(6, 182, 212, 0.3)';
     }
 
-    const midY = this.canvas.height - 65;
+    const midY = this.gameHeight - 65;
 
     // Linha 1: Montanhas distantes (se movem bem devagar)
     this.ctx.fillStyle = mountColor1;
     this.ctx.beginPath();
     this.ctx.moveTo(0, midY);
     // Gerar cumes simples
-    const w = this.canvas.width;
+    const w = this.gameWidth;
     this.ctx.lineTo(w * 0.15, midY - 60);
     this.ctx.lineTo(w * 0.35, midY - 20);
     this.ctx.lineTo(w * 0.60, midY - 80);
@@ -1553,11 +1697,11 @@ class GameEngine {
     this.ctx.save();
 
     const groundHeight = 65;
-    const y = this.canvas.height - groundHeight;
-    const w = this.canvas.width;
+    const y = this.gameHeight - groundHeight;
+    const w = this.gameWidth;
 
     // Solo sólido
-    const groundGrad = this.ctx.createLinearGradient(0, y, 0, this.canvas.height);
+    const groundGrad = this.ctx.createLinearGradient(0, y, 0, this.gameHeight);
     if (this.stage === 'Campeão da Mobilidade') {
       groundGrad.addColorStop(0, '#1e293b');
       groundGrad.addColorStop(1, '#0f172a');
@@ -1626,7 +1770,7 @@ class GameEngine {
       this.ctx.shadowBlur = 15;
       this.ctx.shadowColor = '#fef08a';
       this.ctx.beginPath();
-      let lx = this.canvas.width * 0.7 + (Math.random() * 200 - 100);
+      let lx = this.gameWidth * 0.7 + (Math.random() * 200 - 100);
       let ly = 0;
       this.ctx.moveTo(lx, ly);
       for (let i = 0; i < 5; i++) {
