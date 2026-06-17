@@ -538,6 +538,7 @@ for (let i = 23; i <= 51; i++) {
   catSprites.branco.scared.push(imgB);
 }
 
+
 // Preload Tronco Fixo
 const troncoImg = new Image();
 troncoImg.src = `sprite/tronco.png?v=1`;
