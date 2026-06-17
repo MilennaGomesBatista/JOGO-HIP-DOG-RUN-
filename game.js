@@ -538,6 +538,15 @@ for (let i = 23; i <= 51; i++) {
   catSprites.branco.scared.push(imgB);
 }
 
+// Preload Bola Sprites
+const ballSprites = [];
+for (let i = 6; i <= 51; i++) {
+  let num = String(i).padStart(3, '0');
+  let img = new Image();
+  img.src = `sprite/bola-quicando/ezgif-frame-${num}.png?v=4`;
+  ballSprites.push(img);
+}
+
 // ==========================================
 // 4. CLASSE DE ITENS E OBSTÁCULOS
 // ==========================================
@@ -578,6 +587,12 @@ class GameItem {
         this.isJumping = false;
         this.jumpCooldown = Math.floor(Math.random() * 60) + 30;
       }
+      
+      if (this.name === 'Bola') {
+        this.frameIndex = 0;
+        this.frameTimer = 0;
+        this.isOnRoad = true;
+      }
     } else {
       const spawnHigh = Math.random() < 0.35;
       this.y = spawnHigh ? canvasHeight - 130 : canvasHeight - 65;
@@ -613,7 +628,7 @@ class GameItem {
     }
   }
 
-  draw(ctx, dog) {
+  draw(ctx, dog, isPaused = false) {
     ctx.save();
 
     if (!this.isOnRoad) {
@@ -643,7 +658,9 @@ class GameItem {
     }
 
     if (this.name === 'Gato') {
-      this.frameTimer++;
+      if (!isPaused) {
+        this.frameTimer++;
+      }
       
       // Checar distância pro dog para mudar estado
       let distanceToDog = 9999;
@@ -678,6 +695,26 @@ class GameItem {
         let sh = img.naturalHeight * scale;
         
         ctx.drawImage(img, this.x - sw/2, this.y - sh + 20, sw, sh);
+      }
+    } else if (this.name === 'Bola') {
+      if (!isPaused) {
+        this.frameTimer++;
+      }
+      let currentArray = ballSprites;
+      let frameSpeed = 2;
+      
+      if (this.frameTimer > frameSpeed) {
+        this.frameTimer = 0;
+        this.frameIndex = (this.frameIndex + 1) % currentArray.length;
+      }
+      
+      let img = currentArray[this.frameIndex];
+      if (img && img.complete && img.naturalWidth > 0) {
+        let scale = 0.55; // Ajustar a escala da bola
+        let sw = img.naturalWidth * scale;
+        let sh = img.naturalHeight * scale;
+        // As imagens já tem a altura do pulo no frame, basta colar próximo ao chão
+        ctx.drawImage(img, this.x - sw/2, this.y - sh + 25, sw, sh);
       }
     } else {
       ctx.fillText(this.emoji, this.x, emojiY);
@@ -1020,7 +1057,13 @@ class GameEngine {
     if (this.spawnTimer >= this.spawnInterval) {
       this.spawnTimer = 0;
       // Escolher um item aleatório do catálogo
-      const randomItemData = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
+      let randomItemData = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
+      
+      // Override na fase da praia para colocar a bola
+      if (this.stage === 'Surfista da Praia' && Math.random() < 0.4) {
+        randomItemData = { name: 'Bola', emoji: '', isGood: false, points: 0, penalty: 30, color: '#ef4444' };
+      }
+      
       this.items.push(new GameItem(this.canvas.width, this.canvas.height, randomItemData));
 
       // Ajustar intervalo de spawn de acordo com velocidade
@@ -1337,7 +1380,8 @@ class GameEngine {
     this.drawGround();
 
     // 5. Desenhar Itens
-    this.items.forEach(item => item.draw(this.ctx, this.dog));
+    const isPaused = this.state === 'PAUSED';
+    this.items.forEach(item => item.draw(this.ctx, this.dog, isPaused));
 
     // 6. Desenhar Partículas
     this.particles.forEach(p => p.draw(this.ctx));
