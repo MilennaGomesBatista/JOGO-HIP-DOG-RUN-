@@ -357,7 +357,7 @@ class Dog {
     smallCanvas.width = targetWidth;
     smallCanvas.height = targetHeight;
     const smallCtx = smallCanvas.getContext('2d');
-    
+
     // Configurações para manter a suavidade na redução
     smallCtx.imageSmoothingEnabled = true;
     smallCtx.imageSmoothingQuality = 'high';
@@ -538,12 +538,17 @@ for (let i = 23; i <= 51; i++) {
   catSprites.branco.scared.push(imgB);
 }
 
+// Preload Tronco Fixo
+const troncoImg = new Image();
+troncoImg.src = `sprite/tronco.png?v=1`;
+
 // Preload Bola Sprites
 const ballSprites = [];
-for (let i = 6; i <= 51; i++) {
+const ballFrames = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30];
+for (let i of ballFrames) {
   let num = String(i).padStart(3, '0');
   let img = new Image();
-  img.src = `sprite/bola-quicando/ezgif-frame-${num}.png?v=4`;
+  img.src = `sprite/bola-quicando/ezgif-frame-${num}.png?v=6`;
   ballSprites.push(img);
 }
 
@@ -565,8 +570,8 @@ class GameItem {
     this.x = canvasWidth + 50;
     this.scale = 1.0;
 
-    // Altura de spawn: Cacto e Gato sempre no chão, sem bolha
-    if (this.name === 'Cacto' || this.name === 'Gato') {
+    // Altura de spawn: Cacto, Gato, Bola e Tronco sempre no chão, sem bolha
+    if (this.name === 'Cacto' || this.name === 'Gato' || this.name === 'Bola' || this.name === 'Tronco') {
       this.y = canvasHeight - 65; // Nível do chão
       this.isOnRoad = true;
       if (this.name === 'Cacto' && Math.random() < 0.4) {
@@ -576,10 +581,10 @@ class GameItem {
         this.frameIndex = 0;
         this.frameTimer = 0;
         this.isScared = false;
-        
+
         const catTypes = ['normal', 'preto', 'branco'];
         this.catColor = catTypes[Math.floor(Math.random() * catTypes.length)];
-        
+
         // Física para pulo aleatório
         this.groundY = canvasHeight - 65;
         this.vy = 0;
@@ -587,11 +592,16 @@ class GameItem {
         this.isJumping = false;
         this.jumpCooldown = Math.floor(Math.random() * 60) + 30;
       }
-      
+
       if (this.name === 'Bola') {
         this.frameIndex = 0;
         this.frameTimer = 0;
         this.isOnRoad = true;
+      }
+
+      if (this.name === 'Tronco') {
+        this.isOnRoad = true;
+        this.scale = 1.0;
       }
     } else {
       const spawnHigh = Math.random() < 0.35;
@@ -603,7 +613,7 @@ class GameItem {
   update(speed) {
     if (this.name === 'Gato') {
       this.x -= (speed + 2.5); // Gato corre ativamente em direção ao cachorro
-      
+
       // Lógica de pulo aleatório
       if (!this.isJumping) {
         this.jumpCooldown--;
@@ -616,13 +626,15 @@ class GameItem {
       } else {
         this.vy += this.gravity;
         this.y += this.vy;
-        
+
         if (this.y >= this.groundY) {
           this.y = this.groundY;
           this.vy = 0;
           this.isJumping = false;
         }
       }
+    } else if (this.name === 'Bola') {
+      this.x -= (speed * 0.65); // Bola aparece de forma mais lenta
     } else {
       this.x -= speed;
     }
@@ -633,7 +645,7 @@ class GameItem {
 
     if (!this.isOnRoad) {
       // Remover shadowBlur pesado que causa lentidão
-      
+
       // Círculo base Glassmorphic
       ctx.fillStyle = 'rgba(17, 24, 39, 0.85)';
       ctx.strokeStyle = this.color;
@@ -661,21 +673,21 @@ class GameItem {
       if (!isPaused) {
         this.frameTimer++;
       }
-      
+
       // Checar distância pro dog para mudar estado
       let distanceToDog = 9999;
       if (dog) {
         distanceToDog = this.x - dog.x; // Distância horizontal
       }
-      
+
       // Assusta se chegar a menos de 280px
       if (distanceToDog > 0 && distanceToDog < 280) {
         this.isScared = true;
       }
-      
+
       let currentArray = this.isScared ? catSprites[this.catColor].scared : catSprites[this.catColor].walk;
-      let frameSpeed = this.isScared ? 2 : 3; 
-      
+      let frameSpeed = this.isScared ? 2 : 3;
+
       if (this.frameTimer > frameSpeed) {
         this.frameTimer = 0;
         this.frameIndex++;
@@ -687,34 +699,41 @@ class GameItem {
           }
         }
       }
-      
+
       let img = currentArray[this.frameIndex];
       if (img && img.complete && img.naturalWidth > 0) {
         let scale = 0.45; // Escala ideal para imagens de 250px
         let sw = img.naturalWidth * scale;
         let sh = img.naturalHeight * scale;
-        
-        ctx.drawImage(img, this.x - sw/2, this.y - sh + 20, sw, sh);
+
+        ctx.drawImage(img, this.x - sw / 2, this.y - sh + 20, sw, sh);
       }
     } else if (this.name === 'Bola') {
       if (!isPaused) {
         this.frameTimer++;
       }
       let currentArray = ballSprites;
-      let frameSpeed = 2;
-      
+      let frameSpeed = 9; // <--- AQUI: Animação bem mais lenta (quanto maior, mais lento)
+
       if (this.frameTimer > frameSpeed) {
         this.frameTimer = 0;
         this.frameIndex = (this.frameIndex + 1) % currentArray.length;
       }
-      
+
       let img = currentArray[this.frameIndex];
       if (img && img.complete && img.naturalWidth > 0) {
-        let scale = 0.55; // Ajustar a escala da bola
+        let scale = 0.22; // Escala ajustada para ficar proporcional ao cachorro
         let sw = img.naturalWidth * scale;
         let sh = img.naturalHeight * scale;
         // As imagens já tem a altura do pulo no frame, basta colar próximo ao chão
-        ctx.drawImage(img, this.x - sw/2, this.y - sh + 25, sw, sh);
+        ctx.drawImage(img, this.x - sw / 2, this.y - sh + 15, sw, sh);
+      }
+    } else if (this.name === 'Tronco') {
+      if (troncoImg && troncoImg.complete && troncoImg.naturalWidth > 0) {
+        let scale = 0.22; // Escala da imagem do tronco
+        let sw = troncoImg.naturalWidth * scale;
+        let sh = troncoImg.naturalHeight * scale;
+        ctx.drawImage(troncoImg, this.x - sw / 2, this.y - sh + 20, sw, sh);
       }
     } else {
       ctx.fillText(this.emoji, this.x, emojiY);
@@ -778,7 +797,9 @@ const ITEM_POOL = [
   { name: 'Saltos Altos', emoji: '🪜', isGood: false, color: '#ef4444', penalty: 10 },
   { name: 'Piso Liso', emoji: '💦', isGood: false, color: '#ef4444', penalty: 10 },
   { name: 'Cacto', emoji: '🌵', isGood: false, color: '#ef4444', penalty: 15 },
-  { name: 'Gato', emoji: '🐈', isGood: false, color: '#ef4444', penalty: 20 }
+  { name: 'Gato', emoji: '🐈', isGood: false, color: '#ef4444', penalty: 20 },
+  { name: 'Bola', emoji: '⚽', isGood: false, color: '#ef4444', penalty: 15 },
+  { name: 'Tronco', emoji: '🪵', isGood: false, color: '#8B4513', penalty: 20 }
 ];
 
 const GAME_TIPS = [
@@ -905,7 +926,7 @@ class GameEngine {
     this.speed = 2.5;
     this.stage = 'Filhote';
     this.dog.stage = 'Filhote';
-    
+
     this.items = [];
     this.particles = [];
     this.floatingTexts = [];
@@ -1031,9 +1052,9 @@ class GameEngine {
     // Aumento suave de velocidade conforme score
     let speedMult = 0.0045;
     if (this.stage === 'Mestre da Agilidade') speedMult = 0.004;
-    
+
     // O multiplicador deve ser o mesmo da penúltima fase para manter a velocidade!
-    if (this.stage === 'Lenda Canina' || this.stage === 'Explorador da Floresta' || this.stage === 'Surfista da Praia') speedMult = 0.004; 
+    if (this.stage === 'Lenda Canina' || this.stage === 'Explorador da Floresta' || this.stage === 'Surfista da Praia') speedMult = 0.004;
 
     // Trava o score usado para o cálculo de velocidade para não ficar impossível
     // Mantém a velocidade constante a partir de 1800 pontos (mesma da penúltima fase)
@@ -1058,12 +1079,29 @@ class GameEngine {
       this.spawnTimer = 0;
       // Escolher um item aleatório do catálogo
       let randomItemData = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
-      
+
+      const forbiddenBolaStages = ['Filhote', 'Jovem', 'Adulto saudável', 'Explorador da Floresta'];
+      const forbiddenTroncoStages = ['Filhote', 'Jovem', 'Surfista da Praia'];
+
+      // Remove Cacto na Praia, Bola nas fases proibidas e Tronco nas fases proibidas
+      while (
+        (this.stage === 'Surfista da Praia' && randomItemData.name === 'Cacto') ||
+        (forbiddenBolaStages.includes(this.stage) && randomItemData.name === 'Bola') ||
+        (forbiddenTroncoStages.includes(this.stage) && randomItemData.name === 'Tronco')
+      ) {
+        randomItemData = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
+      }
+
+      // Override na fase da floresta para colocar o tronco mais vezes
+      if (this.stage === 'Explorador da Floresta' && Math.random() < 0.35) {
+        randomItemData = { name: 'Tronco', emoji: '🪵', isGood: false, points: 0, penalty: 20, color: '#8B4513' };
+      }
+
       // Override na fase da praia para colocar a bola
       if (this.stage === 'Surfista da Praia' && Math.random() < 0.4) {
         randomItemData = { name: 'Bola', emoji: '', isGood: false, points: 0, penalty: 30, color: '#ef4444' };
       }
-      
+
       this.items.push(new GameItem(this.canvas.width, this.canvas.height, randomItemData));
 
       // Ajustar intervalo de spawn de acordo com velocidade
